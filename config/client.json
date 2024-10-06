@@ -1,0 +1,25 @@
+{
+  "network": {
+    "bitrate": {
+      "rate": "seconds",
+      "size": "bytes"
+    },
+    "host": "127.0.0.1",
+    "port": 0,
+    "tls": {}
+  },
+  "registration": {
+    "nickname": "",
+    "password": "",
+    "realname": "",
+    "username": "Casper"
+  },
+  "require": {
+    "automatic": {
+      "connect": true,
+      "ping": true,
+      "reconnect": true
+    },
+    "encryption": false
+  }
+}

@@ -1,0 +1,78 @@
+import Channel from "./channel.js";
+import Socket from "./socket/client.js";
+import User from "./user.js";
+import * as utility from "./utility.js";
+
+export default class Client extends Socket {
+  static numerical_replies = utility.numerical_replies;
+
+  channels = new Map();
+
+  join( ...channels ) {
+    let channel = new Channel( channels[0] );
+
+    if ( !this.channels.has( `${ channel }` ) ) this.channels.set( `${ channel }` , channel );
+
+    channel = this.channels.get( `${ channel }` );
+    channel.pending ??= "JOIN";
+
+    if ( channel.pending == "JOIN" ) this.message( `JOIN ${ channel }` );
+
+    setTimeout( () => {
+      if ( !channel.pending ) channels.shift();
+      if ( channels.length ) this.join( ...channels );
+    } , ( 2 ** ++Channel.attempts ) * 1000 );
+  }
+
+  part( ...channels ) {
+    let channel = new Channel( channels[0] );
+
+    if ( !this.channels.has( `${ channel }` ) ) this.channels.set( `${ channel }` , channel );
+
+    channel = this.channels.get( `${ channel }` );
+    channel.pending ??= "PART";
+
+    if ( channel.pending == "PART" ) this.message( `PART ${ channel }` );
+
+    setTimeout( () => {
+      if ( !channel.pending ) channels.shift();
+      if ( channels.length ) this.part( ...channels );
+    } , ( 2 ** ++Channel.attempts ) * 1000 );
+  }
+
+  #monitorChannelPresence() {
+    Channel.attempts ??= -2;
+
+    [ "JOIN" , "PART" ].forEach( ( event ) => {
+      this.on( event , ( msg ) => {
+        let channel = Channel.extractFromParams( msg.params.leading );
+        if ( !this.channels.has( channel ) ) return;
+        channel = this.channels.get( channel );
+
+        if ( msg.prefix.user == this.registration.username ) {
+          channel.pending = null;
+          channel.status = msg.command.name == "PART" ? "PARTED" : "JOINED";
+          Channel.attempts = -2;
+        }
+
+        let user = new User( msg.prefix.nick || msg.prefix.user );
+        if ( !channel.users.has( `${ user }` ) ) channel.users.set( `${ user }` , user );
+
+        user = channel.users.get( `${ user }` );
+        user.status = msg.command.name == "PART" ? "PARTED" : "JOINED";
+      } );
+    } );
+  }
+
+  #monitorEvents() {
+    this.#monitorChannelPresence();
+  }
+
+  constructor( settings ) {
+    super( settings );
+
+    this.channels = new Map();
+
+    this.#monitorEvents();
+  }
+}
