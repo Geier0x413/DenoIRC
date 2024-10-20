@@ -9,6 +9,8 @@ export default class Client extends Socket {
   channels = new Map();
 
   join( ...channels ) {
+    if ( !this.require.automatic.management ) return;
+
     let channel = new Channel( channels[0] );
 
     if ( !this.channels.has( `${ channel }` ) ) this.channels.set( `${ channel }` , channel );
@@ -25,6 +27,8 @@ export default class Client extends Socket {
   }
 
   part( ...channels ) {
+    if ( !this.require.automatic.management ) return;
+
     let channel = new Channel( channels[0] );
 
     if ( !this.channels.has( `${ channel }` ) ) this.channels.set( `${ channel }` , channel );
@@ -41,6 +45,10 @@ export default class Client extends Socket {
   }
 
   #monitorChannelPresence() {
+    if ( !this.require.automatic.management ) return;
+
+    this.channels = new Map();
+
     Channel.attempts ??= -2;
 
     [ "JOIN" , "PART" ].forEach( ( event ) => {
@@ -64,15 +72,22 @@ export default class Client extends Socket {
     } );
   }
 
+  #monitorDisconnect() {
+    if ( !this.require.automatic.management ) return;
+
+    this.on( "disconnect" , () => {
+      this.channels = new Map();
+    } );
+  }
+
   #monitorEvents() {
     this.#monitorChannelPresence();
+    this.#monitorDisconnect();
   }
 
   constructor( settings ) {
     super( settings );
 
-    this.channels = new Map();
-
-    this.#monitorEvents();
+    if ( this.require.automatic.management ) this.#monitorEvents();
   }
 }

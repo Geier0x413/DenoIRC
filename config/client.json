@@ -17,6 +17,7 @@
   "require": {
     "automatic": {
       "connect": true,
+      "management": true,
       "ping": true,
       "reconnect": true
     },

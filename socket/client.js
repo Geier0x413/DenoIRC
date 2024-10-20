@@ -154,7 +154,7 @@ export default class Socket extends EventEmitter {
 
     if ( !settings || typeof settings != "object" ) settings = {};
     settings = Object.deepMerge( DEFAULT_CONFIG , settings );
-
+    
     this.network = settings?.network;
     this.registration = settings?.registration;
     this.require = settings?.require;
