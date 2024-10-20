@@ -6,8 +6,6 @@ import * as utility from "./utility.js";
 export default class Client extends Socket {
   static numerical_replies = utility.numerical_replies;
 
-  channels = new Map();
-
   join( ...channels ) {
     if ( !this.require.automatic.management ) return;
 
