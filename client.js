@@ -42,6 +42,17 @@ export default class Client extends Socket {
     } , ( 2 ** ++Channel.attempts ) * 1000 );
   }
 
+  privmsg( channel , message ) {
+    channel = new Channel( channel );
+    message = utility.stringify( message );
+
+    if ( !this.channels.has( `${ channel }` ) ) this.channels.set( `${ channel }` , channel );
+
+    channel = this.channels.get( `${ channel }` );
+
+    if ( message ) this.message( `PRIVMSG ${ channel } :${ message }` );
+  }
+
   #monitorChannelPresence() {
     if ( !this.require.automatic.management ) return;
 
